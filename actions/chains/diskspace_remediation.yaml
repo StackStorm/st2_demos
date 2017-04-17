@@ -2,7 +2,7 @@
   chain:
     -
       name: "check_dir_size"
-      ref: "st2-demos.check_dir_size"
+      ref: "st2_demos.check_dir_size"
       params:
         hosts: "{{hostname}}"
         directory: "{{directory}}"
@@ -19,7 +19,7 @@
       on-failure: "victorops_escalation"
     -
       name: "validate_dir_size"
-      ref: "st2-demos.check_dir_size"
+      ref: "st2_demos.check_dir_size"
       params:
         hosts: "{{hostname}}"
         directory: "{{directory}}"

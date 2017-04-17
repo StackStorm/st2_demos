@@ -1,6 +1,6 @@
 ---
     name: "sensu_crit_to_slack"
-    pack: "st2-demos"
+    pack: "st2_demos"
     description: "Post all critical alerts to the demo channel in Slack"
     enabled: true
     trigger:

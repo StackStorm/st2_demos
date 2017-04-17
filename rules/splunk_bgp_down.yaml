@@ -11,7 +11,7 @@
   criteria: {}
 
   action:
-    ref: st2-demos.bgp_down_remed_workflow 
+    ref: st2_demos.bgp_down_remed_workflow
     parameters:
       host: "{{trigger.body.result.host}}"
       neighbour: "{{trigger.body.result.neighbour}}"

@@ -1,8 +1,8 @@
 ---
 version: '2.0'
 
-st2-demos.link_flap_remed_workflow:
-  
+st2_demos.link_flap_remed_workflow:
+
   input:
     - host
     - interface
@@ -102,4 +102,4 @@ st2-demos.link_flap_remed_workflow:
       input:
         message: "Something went wrong in link down auto-remediation!"
         channel: "lkhtesting"
-        
+

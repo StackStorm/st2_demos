@@ -43,6 +43,6 @@
       immutable: true
       type: string
     workflow:
-      default: st2-demos.diskspace_remediation.main
+      default: st2_demos.diskspace_remediation.main
       immutable: true
       type: string

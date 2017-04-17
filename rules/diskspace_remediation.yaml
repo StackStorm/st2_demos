@@ -1,6 +1,6 @@
 ---
     name: "diskspace_remediation"
-    pack: "st2-demos"
+    pack: "st2_demos"
     description: "Clean up disk space on critical monitoring event."
     enabled: true
     trigger:
@@ -13,7 +13,7 @@
             pattern: "demo_diskspace"
             type: "equals"
     action:
-        ref: "st2-demos.diskspace_remediation"
+        ref: "st2_demos.diskspace_remediation"
         parameters:
             hostname: "{{trigger.client.name}}"
             directory: "{{system.logs_dir}}"
