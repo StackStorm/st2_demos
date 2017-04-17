@@ -1,11 +1,11 @@
 ---
 version: '2.0'
 
-st2-demos.bgp_down_remed_workflow:
-  
+st2_demos.bgp_down_remed_workflow:
+
   input:
     - host
-    - neighbour 
+    - neighbour
   tasks:
 
     notify_on_slack:

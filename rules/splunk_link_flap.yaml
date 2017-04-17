@@ -11,7 +11,7 @@
   criteria: {}
 
   action:
-    ref: st2-demos.link_flap_remed_workflow
+    ref: st2_demos.link_flap_remed_workflow
     parameters:
       host: "{{trigger.body.result.host}}"
-      interface: "{{trigger.body.result.interface}}" 
+      interface: "{{trigger.body.result.interface}}"

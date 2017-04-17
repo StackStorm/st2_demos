@@ -3,7 +3,7 @@ description: Run a series of simulated actions.
 enabled: true
 entry_point: workflows/bgp_down_remed_workflow.yaml
 name: bgp_down_remed_workflow
-pack: st2-demos
+pack: st2_demos
 parameters:
   host:
     required: true

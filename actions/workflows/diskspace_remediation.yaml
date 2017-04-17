@@ -1,6 +1,6 @@
 ---
 version: '2.0'
-name: st2-demos.diskspace_remediation
+name: st2_demos.diskspace_remediation
 
 workflows:
   main:
@@ -26,7 +26,7 @@ workflows:
           - victorops_escalation
       check_dir_size:
         # [285, 128]
-        action: st2-demos.check_dir_size
+        action: st2_demos.check_dir_size
         input:
           hosts: <% $.hostname %>
           directory: <% $.directory %>
@@ -54,7 +54,7 @@ workflows:
           message: "DemoBot could not autoremediate disk space event on <% $.hostname %>. Alert: <% $.alert_message %>"
       validate_dir_size:
         # [425, 332]
-        action: st2-demos.check_dir_size
+        action: st2_demos.check_dir_size
         input:
           hosts: <% $.hostname %>
           directory: <% $.directory %>

@@ -1,6 +1,6 @@
 ---
     name: "sensu_ok_to_slack"
-    pack: "st2-demos"
+    pack: "st2_demos"
     description: "Post all sensu oks to the demo channel in Slack"
     enabled: true
     trigger:
