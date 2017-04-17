@@ -1,0 +1,42 @@
+---
+  chain:
+    -
+      name: "check_dir_size"
+      ref: "st2-demos.check_dir_size"
+      params:
+        hosts: "{{hostname}}"
+        directory: "{{directory}}"
+        threshold: "{{threshold}}"
+      on-success: "victorops_escalation"
+      on-failure: "remove_files"
+    -
+      name: "remove_files"
+      ref: "core.remote_sudo"
+      params:
+        hosts: "{{hostname}}"
+        cmd: "rm -Rfv {{directory}}/*{{file_extension}}"
+      on-success: "validate_dir_size"
+      on-failure: "victorops_escalation"
+    -
+      name: "validate_dir_size"
+      ref: "st2-demos.check_dir_size"
+      params:
+        hosts: "{{hostname}}"
+        directory: "{{directory}}"
+        threshold: "{{threshold}}"
+      on-success: "post_success_to_slack"
+      on-failure: "victorops_escalation"
+    -
+      name: "post_success_to_slack"
+      ref: "slack.post_message"
+      params:
+        channel: "#demos"
+        message: "DemoBot has pruned {{directory}} on {{hostname}} due to a monitoring event.  ID: {{event_id}}\nhttp://st2demo002:8080/#/history/{{action_context.parent.execution_id}}/general"
+    -
+      name: "victorops_escalation"
+      ref: "victorops.open_incident"
+      params:
+        severity: "critical"
+        entity: "{{hostname}}"
+        message: "DemoBot could not autoremediate disk space event on {{hostname}}. Alert: {{alert_message}}"
+  default: "check_dir_size"

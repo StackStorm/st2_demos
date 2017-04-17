@@ -1,0 +1,48 @@
+---
+  name: "diskspace_remediation"
+  runner_type: mistral-v2
+  description: "Remediation workflow for diskspace alerts"
+  enabled: true
+  entry_point: "workflows/diskspace_remediation.yaml"
+  parameters:
+    hostname:
+      type: "string"
+      description: "Host to remediate disk space on"
+    directory:
+      type: "string"
+      description: "Directory to prune if over the threshold"
+    file_extension:
+      type: "string"
+      description: "file extension to be used during pruning"
+      default: ".log"
+    threshold:
+      type: "integer"
+      description: "threshold for check diskspace action. percentage"
+      default: "50"
+    check_name:
+      type: "string"
+      description: "Check name as passed from sensu"
+    event_id:
+      type: "string"
+      description: "Event ID as passed from monitoring system"
+      default: ""
+    alert_message:
+      type: "string"
+      description: "Alert message as passed from monitoring system"
+      default: ""
+    raw_payload:
+      type: "string"
+      description: "Raw payload from monitoring event.  Used for ticket creation during escalation."
+      default: ""
+    context:
+      default: {}
+      immutable: true
+      type: object
+    task:
+      default: null
+      immutable: true
+      type: string
+    workflow:
+      default: st2-demos.diskspace_remediation.main
+      immutable: true
+      type: string
