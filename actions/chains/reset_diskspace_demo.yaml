@@ -22,4 +22,11 @@
       params:
         check: "diskspace"
         subscribers: "linux"
+      on-success: "remove_stash"
+    -
+      name: "remove_stash"
+      ref: "sensu.unsilence"
+      params:
+        client: "{{hostname}}.uswest2.stackstorm.net"
+        check: "demo_diskspace"
   default: "victorops_recover_incident"
