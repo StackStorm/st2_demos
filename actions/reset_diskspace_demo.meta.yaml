@@ -13,3 +13,5 @@
       default:
         - victorops_recover_incident
         - write_big_file
+        - check_request
+        - remove_stash
