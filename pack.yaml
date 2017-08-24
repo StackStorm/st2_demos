@@ -1,7 +1,7 @@
 ---
-name : st2_demos
 ref: st2_demos
+name : st2_demos
 description : Demos workflows and rules
-version : 0.1.1
-author : st2-dev
+version : 0.1.0
+author : st2_dev
 email : info@stackstorm.com

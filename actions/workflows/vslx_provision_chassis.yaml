@@ -1,0 +1,59 @@
+version: '2.0'
+vslx.vslx_provision_chassis:
+    description: Provision vSLX chassis.
+    input:
+        - host_ip
+        - host_usr 
+        - host_pwd
+        - chassis_name
+        - chassis_type
+        - chassis_linecards
+        - os_dist_path
+        - mgmt_ip
+        - mgmt_mask
+        - mgmt_gw
+
+    tasks:
+        install_pwdless_ssh_dependency:
+            action: core.local
+            input:
+                cmd: "sudo apt-get install sshpass"
+            on-success:
+                - config_pwdless_ssh
+        
+        config_pwdless_ssh:
+            action: core.local
+            input:
+                cmd: "sudo sshpass -p <% $.host_pwd %> ssh-copy-id -i /home/stanley/.ssh/stanley_rsa.pub <% $.host_usr %>@<% $.host_ip %>"
+            on-success:
+                - create_new_chassis 
+
+        create_new_chassis:
+            action: core.remote
+            input:
+                hosts: <% $.host_ip %>
+                cmd: "vsh create chassis <% $.chassis_name %> <% $.chassis_type %> 1 <% $.chassis_linecards %> <% $.os_dist_path %>"
+                username: <% $.host_usr %>
+                timeout: 1800  # 30 min timeout by default for chassis creation. Adjust based on your system resources.
+            on-success:
+                - power_on_chassis
+
+        power_on_chassis:
+            action: core.remote
+            input:
+                hosts: <% $.host_ip %>
+                cmd: "vsh poweron <% $.chassis_name %>"
+                username: <% $.host_usr %>
+            on-success:
+                - add_mgmt_ip_to_chassis
+
+        add_mgmt_ip_to_chassis:
+            action: vslx.vslx_add_static_mgmt_ip
+            input:
+                host: <% $.host_ip %>
+                username: <% $.host_usr %>
+                password: <% $.host_pwd %>
+                timeout: 900  # 15 min timeout by default for expect runner.
+                ip_addr: <% $.mgmt_ip %>
+                cidr_mask: <% $.mgmt_mask %>
+                gateway: <% $.mgmt_gw %>

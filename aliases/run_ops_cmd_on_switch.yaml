@@ -1,0 +1,11 @@
+---
+name: "run_cmd_on_switch"
+pack: "st2_demos"
+description: "Displays output of a show command from switch"
+action_ref: "clicrud.ops_command"
+formats:
+  - "run show cmd {{ command }} on switch {{ host }}"
+ack:
+  enabled: false
+result:
+  format: "cmd results: {~} {{ execution.result.result }}"

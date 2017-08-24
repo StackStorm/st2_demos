@@ -1,0 +1,11 @@
+---
+  name: "logfile_management"
+  runner_type: "action-chain"
+  description: "Manage log file"
+  enabled: true
+  entry_point: "chains/logfile_management_chain.yaml"
+  parameters:
+    output:
+      type: "string"
+      description: "sendu output"
+      required: true

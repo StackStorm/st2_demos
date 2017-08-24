@@ -1,0 +1,17 @@
+---
+  name: "elk_link_flap_webhook_rule"
+  enabled: true
+  description: "ELK link flap  webhook rule"
+
+  trigger:
+    type: "core.st2.webhook"
+    parameters:
+      url: "elk_link_flap"
+
+  criteria: {}
+
+  action:
+    ref: st2_demos.link_flap_remed_workflow
+    parameters:
+      host: "{{trigger.body.host}}"
+      interface: "{{trigger.body.interface}}" 

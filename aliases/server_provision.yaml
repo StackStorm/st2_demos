@@ -1,0 +1,13 @@
+---
+name: "server_provision"
+pack: "st2_demos"
+description: "Configures Edge port on switch"
+action_ref: "network_essentials.server_provision"
+formats:
+  - display: "provision port {{ intf_type }} {{ intf_name }} on switch {{ mgmt_ip }} with vlan {{ vlan_id }}" 
+    representation:
+      - "provision port {{ intf_type }} {{ intf_name }} on switch {{ mgmt_ip }} with vlan {{ vlan_id }} {{ switchport_mode=access }}"
+ack:
+  format: "OK, I'm now configuring port *{{execution.parameters.intf_name}}* on switch *{{execution.parameters.mgmt_ip}}*."
+result:
+  format: "action completed!"

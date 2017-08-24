@@ -1,0 +1,23 @@
+---
+    chain:
+        -
+            name: "notify_on_slack"
+            ref: "chatops.post_message"
+            parameters:
+                channel: "lkhtesting"
+                message: "{{output}}"
+            on-success: "move_logfile"
+            on-failure: "report_failure"
+        -
+            name: "move_logfile"
+            ref: "core.local"
+            parameters:
+                cmd: "mv home/brocade/logdir/logfile /home/brocade/logstore/logfile_`date +%d%b%y`_`date +%T`; touch home/brocade/logdir/logfile; chmod -R 777 home/brocade/logdir/logfile"
+            on-failure: "report_failure"
+        -
+            name: "report_failure"
+            ref: "chatops.post_message"
+            parameters:
+                message: "Something went wrong while managing the logfile!"
+                channel: 'lkhtesting'
+    default: "notify_on_slack"
