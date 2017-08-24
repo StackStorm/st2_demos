@@ -2,7 +2,7 @@
 version: '2.0'
 
 st2_demos.link_flap_remed_workflow:
-
+  
   input:
     - host
     - interface
@@ -13,7 +13,8 @@ st2_demos.link_flap_remed_workflow:
       action: chatops.post_message
       input:
         channel: "lkhtesting"
-        message: "Interface <% $.interface %> just went down on <% $.host %>"
+        message: "*ALERT:* Interface `<% $.interface %>` just went down on `<% $.host %>`"
+        extra: {"slack": {"color": "danger"}}
       on-success:
         - show_run_interface
       on-error:
@@ -29,37 +30,37 @@ st2_demos.link_flap_remed_workflow:
       on-error:
         - report_failure
     send_show_run_interface_to_slack:
-      # [175, 230]
+      # [245, 230]
       action: chatops.post_message
       input:
-        message: <% task(show_run_interface).result.result %>
+        message: "Current interface configuration:\n ```<% task(show_run_interface).result.result %>``` {~}"
         channel: "lkhtesting"
       on-success:
         - bring_up_msg_to_slack
       on-error:
         - report_failure
     bring_up_msg_to_slack:
-      # [245, 332]
+      # [315, 332]
       action: chatops.post_message
       input:
         channel: "lkhtesting"
-        message: "Trying to bring up the link <% $.interface %> on <% $.host %>!"
+        message: "OK, now trying to bring up `<% $.interface %>` on `<% $.host %>`... {~}"
       on-success:
         - bring_up_link
       on-error:
         - report_failure
     bring_up_link:
-      # [315, 434]
+      # [385, 434]
       action: clicrud.config_command
       input:
         host: <% $.host %>
-        command: ["int <% $.interface %>","shut","no shut"]
+        command: ["int <% $.interface %>","no shut"]
       on-success:
         - show_interface_detail
       on-error:
         - report_failure
     show_interface_detail:
-      # [385, 536]
+      # [455, 536]
       action: clicrud.ops_command
       input:
         host: <% $.host %>
@@ -69,37 +70,49 @@ st2_demos.link_flap_remed_workflow:
       on-error:
         - report_failure
     send_interface_details_to_slack:
-      # [455, 638]
+      # [525, 638]
       action: chatops.post_message
       input:
         channel: "lkhtesting"
-        message: <% task(show_interface_detail).result.result %>
+        message: "Interface state is now:\n```<% task(show_interface_detail).result.result %>``` {~}"
       on-success:
-        - send_zendesk_msg_to_slack
+        - send_ticket_msg_to_slack
       on-error:
         - report_failure
-    send_zendesk_msg_to_slack:
-      # [525, 740]
+    send_ticket_msg_to_slack:
+      # [595, 740]
       action: chatops.post_message
       input:
-        message: "Creating a Zendesk issue for this event!"
+        message: "Phew. All looks good. But we better create a Jira issue to track this..."
         channel: "lkhtesting"
+        extra: {"slack": {"color": "good"}}
       on-success:
-        - create_zendesk_tkt
+        - create_jira_issue
       on-error:
         - report_failure
-    create_zendesk_tkt:
-      # [595, 842]
-      action: zendesk.create_ticket
+    create_jira_issue:
+      # [665, 842]
+      action: jira.create_issue
       input:
-        subject: "Link down: <% $.interface %> on <% $.host %>"
+        type: "IT Help"
+        summary: "Link down: <% $.interface %> on <% $.host %>"
         description:  "<% task(show_run_interface).result.result %>\n<% task(show_interface_detail).result.result %>"
+      on-success:
+        - send_jira_details_to_slack
+      on-error:
+        - report_failure
+    send_jira_details_to_slack:
+      # [735, 944]
+      action: chatops.post_message
+      input:
+        channel: "lkhtesting"
+        message: "*Jira ticket created:* <% task(create_jira_issue).result.result.url %>"
       on-error:
         - report_failure
     report_failure:
-      # [145, 944]
+      # [155, 1046]
       action: chatops.post_message
       input:
         message: "Something went wrong in link down auto-remediation!"
         channel: "lkhtesting"
-
+        
