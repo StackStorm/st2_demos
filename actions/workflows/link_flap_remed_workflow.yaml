@@ -2,7 +2,7 @@
 version: '2.0'
 
 st2_demos.link_flap_remed_workflow:
-  
+
   input:
     - host
     - interface
@@ -25,6 +25,8 @@ st2_demos.link_flap_remed_workflow:
       input:
         host: <% $.host %>
         command: "show run interface <% $.interface %>"
+      publish:
+        show_run: '{{ task("show_run_interface").result.result | replace("\\n", "\n") }}'
       on-success:
         - send_show_run_interface_to_slack
       on-error:
@@ -33,7 +35,7 @@ st2_demos.link_flap_remed_workflow:
       # [245, 230]
       action: chatops.post_message
       input:
-        message: "Current interface configuration:\n ```<% task(show_run_interface).result.result %>``` {~}"
+        message: "Current interface configuration:\n ```{{ _.show_run }}``` {~}"
         channel: "lkhtesting"
       on-success:
         - bring_up_msg_to_slack
@@ -65,6 +67,8 @@ st2_demos.link_flap_remed_workflow:
       input:
         host: <% $.host %>
         command: "show interface <% $.interface %>"
+      publish:
+        show_detail: '{{ task("show_interface_detail").result.result | replace("\\n", "\n") }}'
       on-success:
         - send_interface_details_to_slack
       on-error:
@@ -74,7 +78,7 @@ st2_demos.link_flap_remed_workflow:
       action: chatops.post_message
       input:
         channel: "lkhtesting"
-        message: "Interface state is now:\n```<% task(show_interface_detail).result.result %>``` {~}"
+        message: 'Interface state is now:```{{ _.show_detail }}``` {~}'
       on-success:
         - send_ticket_msg_to_slack
       on-error:
@@ -96,7 +100,7 @@ st2_demos.link_flap_remed_workflow:
       input:
         type: "IT Help"
         summary: "Link down: <% $.interface %> on <% $.host %>"
-        description:  "<% task(show_run_interface).result.result %>\n<% task(show_interface_detail).result.result %>"
+        description:  "{{ _.show_run }} \n {{ _.show_detail }}"
       on-success:
         - send_jira_details_to_slack
       on-error:
@@ -115,4 +119,4 @@ st2_demos.link_flap_remed_workflow:
       input:
         message: "Something went wrong in link down auto-remediation!"
         channel: "lkhtesting"
-        
+
