@@ -1,0 +1,41 @@
+---
+description: Capture traffic from multiple switches
+enabled: true
+runner_type: mistral-v2
+entry_point: workflows/multicap.yaml
+name: multicap
+pack: st2_demos
+parameters:
+  filter:
+    required: true
+    type: string
+  timeout:
+    type: integer
+    default: 300
+  switches:
+    type: array
+    required: true
+  count:
+    type: integer
+    default: 100
+  workflow:
+    default: st2_demos.multicap.main
+    immutable: true
+    type: string
+  skip_notify:
+    immutable: true
+    default:
+      - notify_slack
+      - grab_uuid
+      - setup_env
+      - setup_mirror
+      - run_pcap
+      - copy_pcap
+      - count_packets
+      - upload_cloudshark
+      - publish_cloudshark_links
+      - no_upload
+      - teardown_mirror
+      - task2
+      - failure_message
+      - failure_message_main

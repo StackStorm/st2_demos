@@ -2,6 +2,6 @@
 ref: st2_demos
 name : st2_demos
 description : Demos workflows and rules
-version : 0.1.2
+version : 0.2.0
 author : st2_dev
 email : info@stackstorm.com

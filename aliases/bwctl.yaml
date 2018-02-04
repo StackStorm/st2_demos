@@ -1,0 +1,20 @@
+name: bwcctl
+description: Run performance tests between SLX devices
+ack:
+    enabled: true
+    append_url: false
+    format: "Running `{{ execution.parameters.test }}` test between `{{ execution.parameters.source }}` and `{{ execution.parameters.destination }}`."
+action_ref: st2_demos.bwctl
+enabled: true
+extra: {}
+formats:
+  - display: "bwctl {iperf|owamp|tracepath} <source> <destination>"
+    representation:
+      - "bwctl {{test}} {{source}} {{destination}} {{bandwidth=1g}} {{timeout=60}}"
+result:
+  format: "Performance test completed. Results are: ```{{execution.result.perf_result}}```{~}"
+  extra:
+    slack:
+      color: "good"
+      footer: "{{ execution.id }}"
+      footer_icon: "https://stackstorm.com/wp/wp-content/uploads/2015/01/favicon.png"

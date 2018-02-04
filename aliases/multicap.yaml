@@ -1,0 +1,21 @@
+name: multicap
+description: Capture traffic using Insight Architecture
+ack:
+    enabled: true
+    append_url: false
+    format: "Sit tight - I'm going to capture packets matching `{{ execution.parameters.filter }}` on switch(es) `{{ execution.parameters.switches | list  | join (', ') }}`.\nAfter {{ execution.parameters.timeout }} seconds or {{execution.parameters.count}} packets I will post the PCAPs to CloudShark."
+action_ref: st2_demos.multicap
+#action_ref: core.noop
+enabled: true
+extra: {}
+formats:
+  - display: "multicapture <filter> on switches <switch1,switch2>"
+    representation:
+      - "multicapture {{filter}} on switches {{switches}} {{timeout=300}} {{count=100}}"
+result:
+  format: "Capture completed, cleaning up and tearing down capture sessions now."
+  extra:
+    slack:
+      color: "good"
+      footer: "{{ execution.id }}"
+      footer_icon: "https://stackstorm.com/wp/wp-content/uploads/2015/01/favicon.png"
