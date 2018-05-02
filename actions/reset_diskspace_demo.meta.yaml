@@ -8,6 +8,7 @@
     hostname:
       type: "string"
       description: "Host to reset disk space demo on"
+      required: true
     skip_notify:
       immutable: true
       default:
