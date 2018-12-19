@@ -21,7 +21,7 @@
       ref: "sensu.check_request"
       params:
         check: "diskspace"
-        subscribers: "linux"
+        subscribers: "demo-linux"
       on-success: "remove_stash"
     -
       name: "remove_stash"
