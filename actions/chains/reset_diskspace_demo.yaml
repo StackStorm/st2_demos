@@ -1,4 +1,7 @@
 ---
+  vars:
+      logs_dir: "{{ st2kv.system.logs_dir }}"
+
   chain:
     -
       name: "victorops_recover_incident"
@@ -14,7 +17,7 @@
       params:
         timeout: 300
         hosts: "{{hostname}}"
-        cmd: "fallocate -l 4G /var/log/big.log"
+        cmd: "fallocate -l 4G {{ logs_dir }}/big.log"
       on-success: "check_request"
     -
       name: "check_request"
