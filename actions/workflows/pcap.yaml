@@ -1,0 +1,148 @@
+---
+version: '1.0'
+input:
+  - switch
+  - count
+  - timeout
+  - filter
+  - uuid
+output:
+  - packet_count: <% ctx().packet_count %>
+tasks:
+  setup_mirror:
+    action: clicrud.config_command
+    input:
+      host: <% ctx().switch %>
+      command:
+        - monitor session 1
+        - source ethernet 0/4 destination port-channel 99 direction both
+        - monitor session 2
+        - source ethernet 0/40 destination port-channel 99 direction both
+        - monitor session 3
+        - source ethernet 0/50 destination port-channel 99 direction both
+    next:
+      - when: '{{ succeeded() }}'
+        do:
+          - run_pcap
+      - when: '{{ failed() }}'
+        do:
+          - failure_message
+  run_pcap:
+    action: core.remote
+    input:
+      cmd: tshark -ni eth1 -c <% ctx().count %> -w /tmp/st2_<% ctx().switch %>_<% ctx().uuid %>.pcap -s 0 -a duration:<% ctx().timeout %> <% ctx().filter %>
+      hosts: <% ctx().switch %>-tpvm
+      username: root
+      timeout: <% ctx().timeout + 10 %>
+    next:
+      - when: '{{ succeeded() }}'
+        do:
+          - copy_pcap
+      - when: '{{ failed() }}'
+        do:
+          - failure_message
+  copy_pcap:
+    action: linux.scp
+    input:
+      source: root@<% ctx().switch %>-tpvm:/tmp/st2_<% ctx().switch %>_<% ctx().uuid %>.pcap
+      hosts: localhost
+      destination: /home/stanley/pcaps
+    next:
+      - when: '{{ succeeded() }}'
+        publish:
+          - pcap_file: /home/stanley/pcaps/st2_<% ctx().switch %>_<% ctx().uuid %>.pcap
+        do:
+          - count_packets
+      - when: '{{ failed() }}'
+        do:
+          - failure_message
+  count_packets:
+    action: core.local
+    input:
+      cmd: tshark -r <% ctx().pcap_file %> 2>/dev/null|wc -l
+    next:
+      - when: '{{ succeeded() }}'
+        publish:
+          - packet_count: <% result().stdout %>
+      - when: <% succeeded() and (ctx().packet_count != 0) %>
+        publish:
+          - packet_count: <% result().stdout %>
+        do:
+          - upload_cloudshark
+      - when: <% succeeded() and (ctx().packet_count = 0) %>
+        publish:
+          - packet_count: <% result().stdout %>
+        do:
+          - no_upload
+      - when: '{{ failed() }}'
+        do:
+          - failure_message
+  upload_cloudshark:
+    action: cloudshark.upload
+    input:
+      file_path: <% ctx().pcap_file %>
+    next:
+      - when: '{{ succeeded() }}'
+        publish:
+          - cloudshark_url: <% result().result.link %>
+        do:
+          - publish_cloudshark_links
+      - when: '{{ failed() }}'
+        do:
+          - failure_message
+  publish_cloudshark_links:
+    action: chatops.post_message
+    input:
+      channel: <% env().get('__actions').get('st2.action').st2_context.parent.source_channel %>
+      message: PCAP uploaded to CloudShark. Click to view
+      extra:
+        slack:
+          color: good
+          actions:
+            - type: button
+              name: <% ctx().switch %>
+              text: <% ctx().switch %> - <% ctx().packet_count %> packets
+              url: <% ctx().cloudshark_url %>
+              style: primary
+    next:
+      - when: '{{ succeeded() }}'
+        do:
+          - teardown_mirror
+      - when: '{{ failed() }}'
+        do:
+          - failure_message
+  no_upload:
+    action: chatops.post_message
+    input:
+      channel: <% env().get('__actions').get('st2.action').st2_context.parent.source_channel %>
+      message: "The filter `<% ctx().filter %>` did not match any packets on `<% ctx().switch %>`.\n No point uploading an empty PCAP to CloudShark."
+      extra:
+        slack:
+          color: warning
+    next:
+      - when: '{{ succeeded() }}'
+        do:
+          - teardown_mirror
+      - when: '{{ failed() }}'
+        do:
+          - failure_message
+  teardown_mirror:
+    action: clicrud.config_command
+    input:
+      host: <% ctx().switch %>
+      command:
+        - no monitor session 1
+        - no monitor session 2
+        - no monitor session 3
+    next:
+      - when: '{{ failed() }}'
+        do:
+          - failure_message
+  failure_message:
+    action: chatops.post_message
+    input:
+      channel: <% env().get('__actions').get('st2.action').st2_context.parent.source_channel %>
+      message: Ruh-roh...something went wrong
+      extra:
+        slack:
+          color: danger

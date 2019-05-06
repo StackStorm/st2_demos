@@ -1,122 +1,141 @@
 ---
-version: '2.0'
-
-st2_demos.link_flap_remed_workflow:
-
-  input:
-    - host
-    - interface
-  tasks:
-
-    notify_on_slack:
-      # [105, 26]
-      action: chatops.post_message
-      input:
-        channel: "lkhtesting"
-        message: "*ALERT:* Interface `<% $.interface %>` just went down on `<% $.host %>`"
-        extra: {"slack": {"color": "danger"}}
-      on-success:
-        - show_run_interface
-      on-error:
-        - report_failure
-    show_run_interface:
-      # [175, 128]
-      action: clicrud.ops_command
-      input:
-        host: <% $.host %>
-        command: "show run interface <% $.interface %>"
-      publish:
-        show_run: '{{ task("show_run_interface").result.result | replace("\\n", "\n") }}'
-      on-success:
-        - send_show_run_interface_to_slack
-      on-error:
-        - report_failure
-    send_show_run_interface_to_slack:
-      # [245, 230]
-      action: chatops.post_message
-      input:
-        message: "Current interface configuration:\n ```{{ _.show_run }}``` {~}"
-        channel: "lkhtesting"
-      on-success:
-        - bring_up_msg_to_slack
-      on-error:
-        - report_failure
-    bring_up_msg_to_slack:
-      # [315, 332]
-      action: chatops.post_message
-      input:
-        channel: "lkhtesting"
-        message: "OK, now trying to bring up `<% $.interface %>` on `<% $.host %>`... {~}"
-      on-success:
-        - bring_up_link
-      on-error:
-        - report_failure
-    bring_up_link:
-      # [385, 434]
-      action: clicrud.config_command
-      input:
-        host: <% $.host %>
-        command: ["int <% $.interface %>","no shut"]
-      on-success:
-        - show_interface_detail
-      on-error:
-        - report_failure
-    show_interface_detail:
-      # [455, 536]
-      action: clicrud.ops_command
-      input:
-        host: <% $.host %>
-        command: "show interface <% $.interface %>"
-      publish:
-        show_detail: '{{ task("show_interface_detail").result.result | replace("\\n", "\n") }}'
-      on-success:
-        - send_interface_details_to_slack
-      on-error:
-        - report_failure
-    send_interface_details_to_slack:
-      # [525, 638]
-      action: chatops.post_message
-      input:
-        channel: "lkhtesting"
-        message: 'Interface state is now:```{{ _.show_detail }}``` {~}'
-      on-success:
-        - send_ticket_msg_to_slack
-      on-error:
-        - report_failure
-    send_ticket_msg_to_slack:
-      # [595, 740]
-      action: chatops.post_message
-      input:
-        message: "Phew. All looks good. But we better create a Jira issue to track this..."
-        channel: "lkhtesting"
-        extra: {"slack": {"color": "good"}}
-      on-success:
-        - create_jira_issue
-      on-error:
-        - report_failure
-    create_jira_issue:
-      # [665, 842]
-      action: jira.create_issue
-      input:
-        type: "IT Help"
-        summary: "Link down: <% $.interface %> on <% $.host %>"
-        description:  "{{ _.show_run }} \n {{ _.show_detail }}"
-      on-success:
-        - send_jira_details_to_slack
-      on-error:
-        - report_failure
-    send_jira_details_to_slack:
-      # [735, 944]
-      action: chatops.post_message
-      input:
-        channel: "lkhtesting"
-        message: "*Jira ticket created:* <% task(create_jira_issue).result.result.url %>"
-      on-error:
-        - report_failure
-    report_failure:
-      # [155, 1046]
-      action: chatops.post_message
-      input:
-        message: "Something went wrong in link down auto-remediation!"
-        channel: "lkhtesting"
-
+version: '1.0'
+input:
+  - host
+  - interface
+tasks:
+  notify_on_slack:
+    action: chatops.post_message
+    input:
+      channel: lkhtesting
+      message: '*ALERT:* Interface `<% ctx().interface %>` just went down on `<% ctx().host %>`'
+      extra:
+        slack:
+          color: danger
+    next:
+      - when: '{{ succeeded() }}'
+        do:
+          - show_run_interface
+      - when: '{{ failed() }}'
+        do:
+          - report_failure
+  show_run_interface:
+    action: clicrud.ops_command
+    input:
+      host: <% ctx().host %>
+      command: show run interface <% ctx().interface %>
+    next:
+      - when: '{{ succeeded() }}'
+        publish:
+          - show_run: '{{ result().result | replace("\\n", "\n") }}'
+        do:
+          - send_show_run_interface_to_slack
+      - when: '{{ failed() }}'
+        do:
+          - report_failure
+  send_show_run_interface_to_slack:
+    action: chatops.post_message
+    input:
+      message: "Current interface configuration:\n ```{{ ctx().show_run }}``` {~}"
+      channel: lkhtesting
+    next:
+      - when: '{{ succeeded() }}'
+        do:
+          - bring_up_msg_to_slack
+      - when: '{{ failed() }}'
+        do:
+          - report_failure
+  bring_up_msg_to_slack:
+    action: chatops.post_message
+    input:
+      channel: lkhtesting
+      message: OK, now trying to bring up `<% ctx().interface %>` on `<% ctx().host %>`... {~}
+    next:
+      - when: '{{ succeeded() }}'
+        do:
+          - bring_up_link
+      - when: '{{ failed() }}'
+        do:
+          - report_failure
+  bring_up_link:
+    action: clicrud.config_command
+    input:
+      host: <% ctx().host %>
+      command:
+        - int <% ctx().interface %>
+        - no shut
+    next:
+      - when: '{{ succeeded() }}'
+        do:
+          - show_interface_detail
+      - when: '{{ failed() }}'
+        do:
+          - report_failure
+  show_interface_detail:
+    action: clicrud.ops_command
+    input:
+      host: <% ctx().host %>
+      command: show interface <% ctx().interface %>
+    next:
+      - when: '{{ succeeded() }}'
+        publish:
+          - show_detail: '{{ result().result | replace("\\n", "\n") }}'
+        do:
+          - send_interface_details_to_slack
+      - when: '{{ failed() }}'
+        do:
+          - report_failure
+  send_interface_details_to_slack:
+    action: chatops.post_message
+    input:
+      channel: lkhtesting
+      message: Interface state is now:```{{ ctx().show_detail }}``` {~}
+    next:
+      - when: '{{ succeeded() }}'
+        do:
+          - send_ticket_msg_to_slack
+      - when: '{{ failed() }}'
+        do:
+          - report_failure
+  send_ticket_msg_to_slack:
+    action: chatops.post_message
+    input:
+      message: Phew. All looks good. But we better create a Jira issue to track this...
+      channel: lkhtesting
+      extra:
+        slack:
+          color: good
+    next:
+      - when: '{{ succeeded() }}'
+        do:
+          - create_jira_issue
+      - when: '{{ failed() }}'
+        do:
+          - report_failure
+  create_jira_issue:
+    action: jira.create_issue
+    input:
+      type: IT Help
+      summary: 'Link down: <% ctx().interface %> on <% ctx().host %>'
+      description: "{{ ctx().show_run }} \n {{ ctx().show_detail }}"
+    next:
+      - when: '{{ succeeded() }}'
+        do:
+          - send_jira_details_to_slack
+      - when: '{{ failed() }}'
+        do:
+          - report_failure
+  send_jira_details_to_slack:
+    action: chatops.post_message
+    input:
+      channel: lkhtesting
+      message: '*Jira ticket created:* <% result().result.url %>'
+    next:
+      - when: '{{ failed() }}'
+        do:
+          - report_failure
+  report_failure:
+    action: chatops.post_message
+    input:
+      message: Something went wrong in link down auto-remediation!
+      channel: lkhtesting

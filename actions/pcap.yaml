@@ -1,9 +1,9 @@
 ---
-description: Capture traffic from multiple switches
+description: Capture traffic from a switch
 enabled: true
 runner_type: orquesta
-entry_point: workflows/multicap.yaml
-name: multicap
+entry_point: workflows/pcap.yaml
+name: pcap
 pack: st2_demos
 parameters:
   filter:
@@ -12,9 +12,12 @@ parameters:
   timeout:
     type: integer
     default: 300
-  switches:
-    type: array
+  switch:
+    type: string
     required: true
   count:
     type: integer
     default: 100
+  uuid:
+    type: string
+    required: true

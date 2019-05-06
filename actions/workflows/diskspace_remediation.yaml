@@ -1,72 +1,73 @@
 ---
-version: '2.0'
-name: st2_demos.diskspace_remediation
-
-workflows:
-  main:
+version: '1.0'
+input:
+  - hostname
+  - directory
+  - file_extension
+  - threshold
+  - event_id
+  - check_name
+  - alert_message
+  - raw_payload
+tasks:
+  silence_check:
+    action: sensu.silence
     input:
-      - hostname
-      - directory
-      - file_extension
-      - threshold
-      - event_id
-      - check_name
-      - alert_message
-      - raw_payload
-    tasks:
-      silence_check:
-        # [215, 26]
-        action: sensu.silence
-        input:
-          client: <% $.hostname %>
-          check: <% $.check_name %>
-        on-success:
+      client: <% ctx().hostname %>
+      check: <% ctx().check_name %>
+    next:
+      - when: '{{ succeeded() }}'
+        do:
           - check_dir_size
-        on-error:
+      - when: '{{ failed() }}'
+        do:
           - victorops_escalation
-      check_dir_size:
-        # [285, 128]
-        action: st2_demos.check_dir_size
-        input:
-          hosts: <% $.hostname %>
-          directory: <% $.directory %>
-          threshold: <% $.threshold %>
-        on-error:
+  check_dir_size:
+    action: st2_demos.check_dir_size
+    input:
+      hosts: <% ctx().hostname %>
+      directory: <% ctx().directory %>
+      threshold: <% ctx().threshold %>
+    next:
+      - when: '{{ succeeded() }}'
+        do:
+          - victorops_escalation
+      - when: '{{ failed() }}'
+        do:
           - remove_files
-        on-success:
-          - victorops_escalation
-      remove_files:
-        # [355, 230]
-        action: core.remote_sudo
-        input:
-          hosts: <% $.hostname %>
-          cmd: "rm -Rfv <% $.directory %>/*<% $.file_extension %>"
-        on-error:
-          - victorops_escalation
-        on-success:
+  remove_files:
+    action: core.remote_sudo
+    input:
+      hosts: <% ctx().hostname %>
+      cmd: rm -Rfv <% ctx().directory %>/*<% ctx().file_extension %>
+    next:
+      - when: '{{ succeeded() }}'
+        do:
           - validate_dir_size
-      victorops_escalation:
-        # [105, 434]
-        action: victorops.open_incident
-        input:
-          severity: "critical"
-          entity: "<% $.hostname %>"
-          message: "DemoBot could not autoremediate disk space event on <% $.hostname %>. Alert: <% $.alert_message %>"
-      validate_dir_size:
-        # [425, 332]
-        action: st2_demos.check_dir_size
-        input:
-          hosts: <% $.hostname %>
-          directory: <% $.directory %>
-          threshold: <% $.threshold %>
-        on-success:
-          - post_success_to_slack
-        on-error:
+      - when: '{{ failed() }}'
+        do:
           - victorops_escalation
-      post_success_to_slack:
-        # [435, 434]
-        action: slack.post_message
-        input:
-          channel: "#demos"
-          message: "DemoBot has pruned <% $.directory %> on <% $.hostname %> due to a monitoring event.  ID: <% $.event_id %>\nhttps://st2demo004/#/history/<% env().st2_execution_id %>/general"
-
+  victorops_escalation:
+    action: victorops.open_incident
+    input:
+      severity: critical
+      entity: <% ctx().hostname %>
+      message: 'DemoBot could not autoremediate disk space event on <% ctx().hostname %>. Alert: <% ctx().alert_message %>'
+  validate_dir_size:
+    action: st2_demos.check_dir_size
+    input:
+      hosts: <% ctx().hostname %>
+      directory: <% ctx().directory %>
+      threshold: <% ctx().threshold %>
+    next:
+      - when: '{{ succeeded() }}'
+        do:
+          - post_success_to_slack
+      - when: '{{ failed() }}'
+        do:
+          - victorops_escalation
+  post_success_to_slack:
+    action: slack.post_message
+    input:
+      channel: '#demos'
+      message: "DemoBot has pruned <% ctx().directory %> on <% ctx().hostname %> due to a monitoring event.  ID: <% ctx().event_id %>\nhttps://st2demo004/#/history/<% ctx().st2.action_execution_id %>/general"

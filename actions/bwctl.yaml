@@ -1,7 +1,7 @@
 ---
 description: Run performance tests between SLX devices
 enabled: true
-runner_type: mistral-v2
+runner_type: orquesta
 entry_point: workflows/bwctl.yaml
 name: bwctl
 pack: st2_demos
@@ -16,7 +16,7 @@ parameters:
   bandwidth:
     required: false
     type: string
-    default: '1g'
+    default: 1g
   timeout:
     type: integer
     default: 60
@@ -26,20 +26,6 @@ parameters:
   source:
     type: string
     required: true
-    type: string
   destination:
     type: string
     required: true
-    type: string
-  workflow:
-    default: st2_demos.bwctl.main
-    immutable: true
-    type: string
-  skip_notify:
-    immutable: true
-    default:
-      - choose_test
-      - iperf_test
-      - owamp_test
-      - tracepath_test
-      - failure_message
