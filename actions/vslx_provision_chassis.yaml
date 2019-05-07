@@ -1,59 +1,59 @@
 ---
 name: vslx_provision_chassis
-runner_type: mistral-v2
-description: "Provisions vSLX chassis\nExample run:\nst2 run vslx.vslx_provision_chassis host_ip=x.x.x.x host_usr=xxxxx host_pwd=xxxxx chassis_name=vslx1 chassis_type=F4 chassis_linecards=1/72x10G mgmt_ip=x.x.x.x mgmt_mask=24 mgmt_gw=x.x.x.x" 
+runner_type: orquesta
+description: "Provisions vSLX chassis\nExample run:\nst2 run vslx.vslx_provision_chassis host_ip=x.x.x.x host_usr=xxxxx host_pwd=xxxxx chassis_name=vslx1 chassis_type=F4 chassis_linecards=1/72x10G mgmt_ip=x.x.x.x mgmt_mask=24 mgmt_gw=x.x.x.x"
 enabled: true
 entry_point: workflows/vslx_provision_chassis.yaml
 parameters:
-    host_ip:
-        description: IP address of the vSLX chassis host server 
-        type: string
-        required: true
-    host_usr:
-        description: Username of the vSLX chassis host server
-        type: string
-        required: true
-    host_pwd:
-        description: Password of the vSLX chassis host server 
-        type: string
-        required: true
-        secret: true
-    chassis_name:
-        description: vSLX chassis name 
-        type: string
-        required: true
-    chassis_type:
-        description: vSLX chassis type (F4/F8) 
-        type: string
-        enum:
-          - F4 
-          - F8
-        default: F4 
-        required: true
-    chassis_linecards:
-        description: slot#/lc_type eg. '1/72x10G, 2/36x100G,4/72x10G' for 3 line cards in slot 1(72x10G),2(36x100G) and 4(72x10G) respectively
+  host_ip:
+    description: IP address of the vSLX chassis host server
+    type: string
+    required: true
+  host_usr:
+    description: Username of the vSLX chassis host server
+    type: string
+    required: true
+  host_pwd:
+    description: Password of the vSLX chassis host server
+    type: string
+    required: true
+    secret: true
+  chassis_name:
+    description: vSLX chassis name
+    type: string
+    required: true
+  chassis_type:
+    description: vSLX chassis type (F4/F8)
+    type: string
+    enum:
+      - F4
+      - F8
+    default: F4
+    required: true
+  chassis_linecards:
+    description: slot#/lc_type eg. '1/72x10G, 2/36x100G,4/72x10G' for 3 line cards in slot 1(72x10G),2(36x100G) and 4(72x10G) respectively
 #        type: string 
 #        required: true
-        type: array
-        items: 
-          type: string
-          enum:
-            - 72x10G
-            - 36x100G
-        minItems: 1
-    os_dist_path:
-        description: vSLX OS distribution path 
-        type: string
-        default: "/dist/" 
-    mgmt_ip:
-        description: Mgmt interface IP address 
-        type: string
-        required: true
-    mgmt_mask:
-        description: Netmask in CIDR notation eg. '24' for /24 mask 
-        type: string
-        required: true
-    mgmt_gw:
-        description: Gateway IP address 
-        type: string
-        required: true
+    type: array
+    items:
+      type: string
+      enum:
+        - 72x10G
+        - 36x100G
+    minItems: 1
+  os_dist_path:
+    description: vSLX OS distribution path
+    type: string
+    default: /dist/
+  mgmt_ip:
+    description: Mgmt interface IP address
+    type: string
+    required: true
+  mgmt_mask:
+    description: Netmask in CIDR notation eg. '24' for /24 mask
+    type: string
+    required: true
+  mgmt_gw:
+    description: Gateway IP address
+    type: string
+    required: true
