@@ -18,18 +18,4 @@
         timeout: 300
         hosts: "{{hostname}}"
         cmd: "fallocate -l 4G {{ logs_dir }}/big.log"
-      on-success: "check_request"
-    -
-      name: "check_request"
-      ref: "sensu.check_request"
-      params:
-        check: "diskspace"
-        subscribers: "demo-linux"
-      on-success: "remove_stash"
-    -
-      name: "remove_stash"
-      ref: "sensu.unsilence"
-      params:
-        client: "{{hostname}}.uswest2.stackstorm.net"
-        check: "demo_diskspace"
   default: "victorops_recover_incident"
