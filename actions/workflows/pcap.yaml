@@ -61,15 +61,12 @@ tasks:
     input:
       cmd: tshark -r <% ctx().pcap_file %> 2>/dev/null|wc -l
     next:
-      - when: '{{ succeeded() }}'
-        publish:
-          - packet_count: <% result().stdout %>
-      - when: <% succeeded() and (ctx().packet_count != 0) %>
+      - when: <% succeeded() and (result().stdout != 0) %>
         publish:
           - packet_count: <% result().stdout %>
         do:
           - upload_cloudshark
-      - when: <% succeeded() and (ctx().packet_count = 0) %>
+      - when: <% succeeded() and (result().stdout = 0) %>
         publish:
           - packet_count: <% result().stdout %>
         do:

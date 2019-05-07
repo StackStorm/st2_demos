@@ -108,28 +108,27 @@ tasks:
     next:
       - when: '{{ succeeded() }}'
         do:
-          - create_jira_issue
+          - create_ticket
       - when: '{{ failed() }}'
         do:
           - report_failure
-  create_jira_issue:
-    action: jira.create_issue
+  create_ticket:
+    action: zendesk.create_ticket
     input:
-      type: IT Help
-      summary: 'Link down: <% ctx().interface %> on <% ctx().host %>'
+      subject: 'Link down: <% ctx().interface %> on <% ctx().host %>'
       description: "{{ ctx().show_run }} \n {{ ctx().show_detail }}"
     next:
       - when: '{{ succeeded() }}'
         do:
-          - send_jira_details_to_slack
+          - send_details_to_slack
       - when: '{{ failed() }}'
         do:
           - report_failure
-  send_jira_details_to_slack:
+  send_details_to_slack:
     action: chatops.post_message
     input:
-      channel: lkhtesting
-      message: '*Jira ticket created:* <% result().result.url %>'
+      channel: general
+      message: '*Ticket created:* <% task(create_ticket).result.result.ticket_url %>'
     next:
       - when: '{{ failed() }}'
         do:

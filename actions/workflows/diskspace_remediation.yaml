@@ -21,7 +21,7 @@ tasks:
           - check_dir_size
       - when: '{{ failed() }}'
         do:
-          - victorops_escalation
+          - post_error_to_slack
   check_dir_size:
     action: st2_demos.check_dir_size
     input:
@@ -31,7 +31,7 @@ tasks:
     next:
       - when: '{{ succeeded() }}'
         do:
-          - victorops_escalation
+          - post_error_to_slack
       - when: '{{ failed() }}'
         do:
           - remove_files
@@ -46,13 +46,7 @@ tasks:
           - validate_dir_size
       - when: '{{ failed() }}'
         do:
-          - victorops_escalation
-  victorops_escalation:
-    action: victorops.open_incident
-    input:
-      severity: critical
-      entity: <% ctx().hostname %>
-      message: 'DemoBot could not autoremediate disk space event on <% ctx().hostname %>. Alert: <% ctx().alert_message %>'
+          - post_error_to_slack
   validate_dir_size:
     action: st2_demos.check_dir_size
     input:
@@ -65,9 +59,14 @@ tasks:
           - post_success_to_slack
       - when: '{{ failed() }}'
         do:
-          - victorops_escalation
+          - post_error_to_slack
   post_success_to_slack:
-    action: slack.post_message
+    action: chatops.post_message
     input:
       channel: '#demos'
       message: "DemoBot has pruned <% ctx().directory %> on <% ctx().hostname %> due to a monitoring event.  ID: <% ctx().event_id %>\nhttps://st2demo004/#/history/<% ctx().st2.action_execution_id %>/general"
+  post_error_to_slack:
+    action: chatops.post_message
+    input:
+      channel: '#demos'
+      message: "Something has gone wrong with DemoBot - check https://st2demo004/#/history/<% ctx().st2.action_execution_id %>/general"
